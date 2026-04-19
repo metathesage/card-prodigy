@@ -89,10 +89,10 @@ Respond ONLY with valid JSON in this exact shape:
     const parsed = JSON.parse(content) as { picks?: Array<{ cardId: string; thesis: string; signal: string; upside: string }> };
 
     const picks: AiPick[] = (parsed.picks || [])
-      .map((p) => {
+      .reduce<AiPick[]>((acc, p) => {
         const card = candidates.find((c) => c.id === p.cardId);
-        if (!card) return null;
-        return {
+        if (!card) return acc;
+        acc.push({
           cardId: card.id,
           cardName: card.name,
           category: card.category,
@@ -101,9 +101,9 @@ Respond ONLY with valid JSON in this exact shape:
           thesis: p.thesis,
           signal: (["strong", "medium", "watch"].includes(p.signal) ? p.signal : "medium") as AiPick["signal"],
           upside: p.upside,
-        };
-      })
-      .filter((p): p is AiPick => p !== null)
+        });
+        return acc;
+      }, [])
       .slice(0, 4);
 
     if (picks.length === 0) {
