@@ -1,6 +1,8 @@
 // Unified card model across Pokemon, Yu-Gi-Oh, NBA
 export type CardCategory = "pokemon" | "yugioh" | "nba";
 
+export type Signal = "buy" | "sell" | "hold";
+
 export interface UnifiedCard {
   id: string;                // namespaced: "pokemon:base1-4"
   category: CardCategory;
@@ -16,6 +18,11 @@ export interface UnifiedCard {
   high?: number;
   low?: number;
   releaseYear?: number;
+  // Premium analytics
+  population?: number;       // PSA / BGS pop count where known
+  popGrade?: string;         // e.g. "PSA 10"
+  weeklyChange?: number;     // 7d % change
+  monthlyChange?: number;    // 30d % change
 }
 
 export interface PriceHistoryPoint {
