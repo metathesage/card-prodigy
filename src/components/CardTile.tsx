@@ -11,7 +11,6 @@ const FALLBACK_IMG =
 
 export function CardTile({ card, rank }: CardTileProps) {
   const up = card.changePct >= 0;
-  const isPhoto = card.category === "nba"; // ESPN/NBA headshots — frame as slab
   return (
     <Link
       to="/card/$id"
@@ -29,7 +28,7 @@ export function CardTile({ card, rank }: CardTileProps) {
         {card.category}
       </div>
 
-      <div className={`aspect-[3/4] relative overflow-hidden ${isPhoto ? "bg-gradient-to-br from-surface-2 via-surface-1 to-surface-3" : "bg-surface-2"}`}>
+      <div className="aspect-[3/4] relative overflow-hidden bg-surface-2 flex items-center justify-center">
         {card.imageUrl ? (
           <img
             src={card.imageUrl}
@@ -38,26 +37,12 @@ export function CardTile({ card, rank }: CardTileProps) {
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = FALLBACK_IMG;
             }}
-            className={`w-full h-full ${isPhoto ? "object-contain p-2" : "object-cover"} group-hover:scale-105 transition-transform duration-700 ease-out`}
+            className="max-w-full max-h-full object-contain p-3 group-hover:scale-105 transition-transform duration-700 ease-out"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground font-mono text-xs">
-            NO IMAGE
-          </div>
+          <div className="text-muted-foreground font-mono text-xs">NO IMAGE</div>
         )}
-        {/* Slab look for NBA player photos */}
-        {isPhoto && (
-          <>
-            <div className="absolute inset-x-0 top-0 px-3 py-1.5 bg-background/80 backdrop-blur-sm flex items-center justify-between font-mono text-[8px] uppercase tracking-[0.25em]">
-              <span className="text-iris">{card.popGrade ?? "PSA 10"}</span>
-              <span className="text-muted-foreground">{card.releaseYear ?? ""}</span>
-            </div>
-            <div className="absolute inset-x-0 bottom-0 px-3 py-1.5 bg-background/80 backdrop-blur-sm font-mono text-[8px] uppercase tracking-[0.25em] text-muted-foreground text-center line-clamp-1">
-              {card.setName}
-            </div>
-          </>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/0 to-transparent opacity-80 group-hover:opacity-60 transition" />
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent opacity-70 group-hover:opacity-40 transition pointer-events-none" />
       </div>
 
       <div className="p-4 space-y-2">
