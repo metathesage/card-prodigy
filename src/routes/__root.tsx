@@ -34,14 +34,14 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lustre — Luxury Card Tracking" },
+      { title: "VAULT — Real-time Card Tracking" },
       {
         name: "description",
         content:
           "Real-time price tracking, AI-driven investment picks and portfolio analytics for Pokemon, Yu-Gi-Oh, and NBA cards.",
       },
-      { name: "author", content: "Lustre" },
-      { property: "og:title", content: "Lustre — Luxury Card Tracking" },
+      { name: "author", content: "VAULT" },
+      { property: "og:title", content: "VAULT — Real-time Card Tracking" },
       {
         property: "og:description",
         content:

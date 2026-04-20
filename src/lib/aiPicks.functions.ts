@@ -8,6 +8,9 @@ export interface AiPick {
   category: string;
   imageUrl: string;
   marketPrice: number;
+  setName?: string;
+  rarity?: string;
+  releaseYear?: number;
   thesis: string;     // 1-2 sentence reasoning
   signal: "strong" | "medium" | "watch";
   upside: string;     // e.g. "+25-40% / 90d"
@@ -98,6 +101,9 @@ Respond ONLY with valid JSON in this exact shape:
           category: card.category,
           imageUrl: card.imageUrl,
           marketPrice: card.marketPrice,
+          setName: card.setName,
+          rarity: card.rarity,
+          releaseYear: card.releaseYear,
           thesis: p.thesis,
           signal: (["strong", "medium", "watch"].includes(p.signal) ? p.signal : "medium") as AiPick["signal"],
           upside: p.upside,
@@ -118,7 +124,6 @@ Respond ONLY with valid JSON in this exact shape:
 });
 
 function heuristicPicks(cards: UnifiedCard[]): AiPick[] {
-  // Pick the most-down cards (potential bounce) — straightforward fallback
   const down = rankByChange(cards, "down", 4);
   return down.map((c) => ({
     cardId: c.id,
@@ -126,6 +131,9 @@ function heuristicPicks(cards: UnifiedCard[]): AiPick[] {
     category: c.category,
     imageUrl: c.imageUrl,
     marketPrice: c.marketPrice,
+    setName: c.setName,
+    rarity: c.rarity,
+    releaseYear: c.releaseYear,
     thesis: `Currently down ${Math.abs(c.changePct).toFixed(1)}% in 24h — potential mean-reversion entry on a historically liquid card.`,
     signal: "medium",
     upside: "+15-30% / 90d",

@@ -1,11 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth";
-import { LustreMark } from "./LustreMark";
+import { VaultMark } from "./LustreMark";
 
 const NAV = [
   { to: "/", label: "Index" },
   { to: "/browse", label: "Browse" },
-  { to: "/portfolio", label: "Portfolio" },
+  { to: "/portfolio", label: "Vault" },
 ];
 
 export function SiteHeader() {
@@ -16,8 +16,8 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 backdrop-blur-xl bg-background/70 hairline-b">
       <div className="mx-auto max-w-[1400px] px-6 lg:px-10 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
-          <LustreMark className="w-7 h-7" />
-          <span className="font-mono text-sm tracking-[0.3em] uppercase">Lustre</span>
+          <VaultMark className="w-7 h-7" />
+          <span className="font-mono text-sm tracking-[0.35em] uppercase">VAULT</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">

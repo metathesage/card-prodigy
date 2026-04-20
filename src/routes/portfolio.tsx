@@ -4,15 +4,16 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchCardById } from "@/lib/cards";
+import { deriveSignal } from "@/lib/cards/signals";
 import type { UnifiedCard } from "@/lib/cards/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
     meta: [
-      { title: "Portfolio — Lustre" },
+      { title: "Vault — VAULT" },
       { name: "description", content: "Track the value of your card collection in real time." },
-      { property: "og:title", content: "Portfolio — Lustre" },
+      { property: "og:title", content: "Vault — VAULT" },
       { property: "og:description", content: "Real-time portfolio analytics for your card collection." },
     ],
   }),
@@ -58,12 +59,17 @@ function PortfolioPage() {
       .select("*")
       .order("created_at", { ascending: false });
     if (error) {
+      console.error("[portfolio] load error", error);
       toast.error(error.message);
       setLoading(false);
       return;
     }
     const items = (data ?? []) as PortfolioRow[];
-    // Look up current prices in parallel
+    // Show rows immediately, then enrich with current prices
+    setRows(items.map((r) => ({ ...r, current: null })));
+    setLoading(false);
+
+    // Look up current prices in parallel (best-effort, don't block UI)
     const valued = await Promise.all(
       items.map(async (r) => ({
         ...r,
@@ -71,7 +77,6 @@ function PortfolioPage() {
       }))
     );
     setRows(valued);
-    setLoading(false);
   };
 
   const remove = async (id: string) => {
@@ -112,7 +117,7 @@ function PortfolioPage() {
       <div className="hairline-b">
         <div className="mx-auto max-w-[1400px] w-full px-6 lg:px-10 py-12">
           <div className="font-mono text-[10px] tracking-[0.4em] uppercase text-muted-foreground mb-3">
-            Vault — Portfolio
+            Section 08 — Vault
           </div>
           <h1 className="font-mono text-4xl md:text-6xl tracking-tight">
             Your <span className="text-iris">collection</span>
@@ -156,11 +161,12 @@ function PortfolioPage() {
         ) : (
           <div className="hairline">
             <div className="hidden md:grid grid-cols-12 gap-4 py-3 text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground border-b border-hairline">
-              <div className="col-span-5">Card</div>
+              <div className="col-span-4">Card</div>
               <div className="col-span-1 text-right">Qty</div>
-              <div className="col-span-2 text-right">Cost</div>
+              <div className="col-span-2 text-right">Cost / unit</div>
               <div className="col-span-2 text-right">Market</div>
               <div className="col-span-1 text-right">P&L</div>
+              <div className="col-span-1 text-right">Signal</div>
               <div className="col-span-1" />
             </div>
             {rows.map((r) => {
@@ -168,14 +174,22 @@ function PortfolioPage() {
               const cost = r.purchase_price ?? 0;
               const pnlRow = (market - cost) * r.quantity;
               const upRow = pnlRow >= 0;
+              const isPhoto = r.card_category === "nba";
+              const sig = r.current ? deriveSignal(r.current).action : null;
               return (
                 <div
                   key={r.id}
                   className="grid grid-cols-2 md:grid-cols-12 gap-4 items-center py-4 border-b border-hairline hover:bg-surface-2/40 transition"
                 >
-                  <div className="col-span-2 md:col-span-5 flex items-center gap-4">
+                  <div className="col-span-2 md:col-span-4 flex items-center gap-4">
                     {r.card_image_url && (
-                      <img src={r.card_image_url} alt={r.card_name} className="w-12 h-16 object-cover bg-surface-2" />
+                      <div className={`w-12 h-16 flex-shrink-0 overflow-hidden ${isPhoto ? "bg-gradient-to-br from-surface-2 to-surface-3" : "bg-surface-2"}`}>
+                        <img
+                          src={r.card_image_url}
+                          alt={r.card_name}
+                          className={`w-full h-full ${isPhoto ? "object-contain" : "object-cover"}`}
+                        />
+                      </div>
                     )}
                     <div className="min-w-0">
                       <Link
@@ -199,6 +213,17 @@ function PortfolioPage() {
                   </div>
                   <div className={`md:col-span-1 text-right font-mono tabular-nums text-sm ${upRow ? "text-bull" : "text-bear"}`}>
                     {upRow ? "+" : ""}${pnlRow.toFixed(2)}
+                  </div>
+                  <div className="md:col-span-1 text-right">
+                    {sig && (
+                      <span className={`font-mono text-[9px] tracking-[0.25em] uppercase px-2 py-0.5 border ${
+                        sig === "buy" ? "text-bull bg-bull/10 border-bull/30" :
+                        sig === "sell" ? "text-bear bg-bear/10 border-bear/30" :
+                        "text-muted-foreground bg-foreground/5 border-foreground/15"
+                      }`}>
+                        {sig}
+                      </span>
+                    )}
                   </div>
                   <div className="md:col-span-1 text-right">
                     <button
