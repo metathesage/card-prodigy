@@ -41,7 +41,7 @@ const SEEDS: SeedCard[] = [
     setName: "1986 Fleer",
     number: "#57",
     rarity: "Rookie · PSA 9",
-    imageUrl: "https://a.espncdn.com/i/headshots/nba/players/full/1035.png",
+    imageUrl: "https://cdn.nba.com/headshots/nba/latest/1040x760/977.png",
     basePrice: 24500,
     releaseYear: 1986,
     population: 18250,
