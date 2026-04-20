@@ -8,16 +8,16 @@ import type { UnifiedCard, CardCategory } from "@/lib/cards/types";
 export const Route = createFileRoute("/browse")({
   head: () => ({
     meta: [
-      { title: "Browse the Card Index — Lustre" },
+      { title: "Browse the Index — VAULT" },
       {
         name: "description",
         content:
           "Explore live prices for Pokemon, Yu-Gi-Oh, and NBA cards. Search, filter by category, and dive into individual card analytics.",
       },
-      { property: "og:title", content: "Browse the Card Index — Lustre" },
+      { property: "og:title", content: "Browse the Index — VAULT" },
       {
         property: "og:description",
-        content: "Search live card prices across Pokemon, Yu-Gi-Oh, and NBA on Lustre.",
+        content: "Search live card prices across Pokemon, Yu-Gi-Oh, and NBA on VAULT.",
       },
     ],
   }),
