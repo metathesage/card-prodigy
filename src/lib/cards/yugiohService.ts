@@ -81,21 +81,32 @@ function toUnified(c: YugiohApiCard): UnifiedCard {
 
 let _topCache: { at: number; data: UnifiedCard[] } | null = null;
 
-export async function fetchYugiohTop(pageSize = 24): Promise<UnifiedCard[]> {
+export async function fetchYugiohTop(pageSize = 48): Promise<UnifiedCard[]> {
   const now = Date.now();
   if (_topCache && now - _topCache.at < 60_000 * 5) {
     return _topCache.data.slice(0, pageSize);
   }
-  const url = `${BASE}/cardinfo.php?sort=tcgplayer&num=${pageSize}&offset=0`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) {
-    console.error("[yugioh] fetch failed", res.status);
-    return [];
+  // Fetch new cards + popular cards by using multiple sort strategies
+  const [byPrice, byViews] = await Promise.all([
+    fetch(`${BASE}/cardinfo.php?sort=tcgplayer&num=${Math.min(pageSize, 50)}&offset=0`)
+      .then((r) => r.ok ? r.json() as Promise<{ data: YugiohApiCard[] }> : { data: [] })
+      .catch(() => ({ data: [] })),
+    fetch(`${BASE}/cardinfo.php?sort=views&num=${Math.min(pageSize, 50)}&offset=0`)
+      .then((r) => r.ok ? r.json() as Promise<{ data: YugiohApiCard[] }> : { data: [] })
+      .catch(() => ({ data: [] })),
+  ]);
+
+  const seen = new Set<number>();
+  const merged: UnifiedCard[] = [];
+  for (const c of [...(byPrice.data || []), ...(byViews.data || [])]) {
+    if (seen.has(c.id)) continue;
+    seen.add(c.id);
+    const card = toUnified(c);
+    if (card.marketPrice > 0) merged.push(card);
   }
-  const json = (await res.json()) as { data: YugiohApiCard[] };
-  const out = (json.data || []).map(toUnified).filter((c) => c.marketPrice > 0);
-  _topCache = { at: now, data: out };
-  return out;
+
+  _topCache = { at: now, data: merged };
+  return merged.slice(0, pageSize);
 }
 
 export async function fetchYugiohCard(id: string): Promise<UnifiedCard | null> {
@@ -106,9 +117,9 @@ export async function fetchYugiohCard(id: string): Promise<UnifiedCard | null> {
   return json.data?.[0] ? toUnified(json.data[0]) : null;
 }
 
-export async function searchYugiohCards(query: string, pageSize = 24): Promise<UnifiedCard[]> {
+export async function searchYugiohCards(query: string, pageSize = 50): Promise<UnifiedCard[]> {
   if (!query.trim()) return fetchYugiohTop(pageSize);
-  const url = `${BASE}/cardinfo.php?fname=${encodeURIComponent(query)}&num=${pageSize}&offset=0`;
+  const url = `${BASE}/cardinfo.php?fname=${encodeURIComponent(query)}&num=${Math.min(pageSize, 100)}&offset=0`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) return [];
   const json = (await res.json()) as { data: YugiohApiCard[] };
@@ -127,10 +138,28 @@ export async function fetchYugiohSets(): Promise<Array<{ name: string; code: str
   }));
 }
 
-export async function fetchYugiohCardsBySet(setCode: string, pageSize = 48): Promise<UnifiedCard[]> {
-  const url = `${BASE}/cardinfo.php?cardset=${encodeURIComponent(setCode)}&num=${pageSize}&offset=0&sort=tcgplayer`;
+export async function fetchYugiohCardsBySet(setCode: string, pageSize = 100): Promise<UnifiedCard[]> {
+  const url = `${BASE}/cardinfo.php?cardset=${encodeURIComponent(setCode)}&num=${Math.min(pageSize, 200)}&offset=0&sort=tcgplayer`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) return [];
   const json = (await res.json()) as { data: YugiohApiCard[] };
   return (json.data || []).map(toUnified).filter((c) => c.marketPrice > 0);
+}
+
+// Fetch by archetype — gives us thematic groupings of cards
+export async function fetchYugiohByArchetype(archetype: string, pageSize = 50): Promise<UnifiedCard[]> {
+  const url = `${BASE}/cardinfo.php?archetype=${encodeURIComponent(archetype)}&num=${Math.min(pageSize, 100)}&offset=0&sort=tcgplayer`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { data: YugiohApiCard[] };
+  return (json.data || []).map(toUnified).filter((c) => c.marketPrice > 0);
+}
+
+// Fetch all archetypes for browsing
+export async function fetchYugiohArchetypes(): Promise<string[]> {
+  const url = `${BASE}/archetypes.php`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return [];
+  const json = (await res.json()) as Array<{ archetype_name: string }>;
+  return json.map((a) => a.archetype_name);
 }

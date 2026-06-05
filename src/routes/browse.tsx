@@ -288,9 +288,9 @@ function BrowsePage() {
 
       <main className="mx-auto w-full max-w-[1400px] px-6 lg:px-10 py-12 flex-1">
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-hairline">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="surface-1 aspect-[3/4] animate-shimmer" />
+              <div key={i} className="surface-1 aspect-[3/4] animate-shimmer rounded-lg" />
             ))}
           </div>
         ) : filtered.length === 0 ? (

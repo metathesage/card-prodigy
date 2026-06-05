@@ -1,12 +1,12 @@
 // Unified card service that dispatches to the right backend by category.
 import type { UnifiedCard, CardCategory, PriceHistoryPoint } from "./types";
 import { fetchPokemonCards, fetchPokemonCard, searchPokemonCards, fetchPokemonSets } from "./pokemonService";
-import { fetchYugiohTop, fetchYugiohCard, searchYugiohCards, fetchYugiohSets, fetchYugiohCardsBySet } from "./yugiohService";
+import { fetchYugiohTop, fetchYugiohCard, searchYugiohCards, fetchYugiohSets, fetchYugiohCardsBySet, fetchYugiohByArchetype, fetchYugiohArchetypes } from "./yugiohService";
 import { getSeededNbaCards, getSeededNbaCard, getSeededPriceHistory } from "./seedNba";
 
 export type { UnifiedCard, CardCategory, PriceHistoryPoint, RecentSale, CardSet } from "./types";
 
-export async function fetchTopCards(category: CardCategory, pageSize = 24): Promise<UnifiedCard[]> {
+export async function fetchTopCards(category: CardCategory, pageSize = 48): Promise<UnifiedCard[]> {
   if (category === "pokemon") return fetchPokemonCards({ pageSize });
   if (category === "yugioh") return fetchYugiohTop(pageSize);
   return getSeededNbaCards();
@@ -14,8 +14,8 @@ export async function fetchTopCards(category: CardCategory, pageSize = 24): Prom
 
 export async function fetchAllTopCards(): Promise<UnifiedCard[]> {
   const [p, y, n] = await Promise.all([
-    fetchPokemonCards({ pageSize: 18 }).catch(() => []),
-    fetchYugiohTop(18).catch(() => []),
+    fetchPokemonCards({ pageSize: 30 }).catch(() => []),
+    fetchYugiohTop(30).catch(() => []),
     Promise.resolve(getSeededNbaCards()),
   ]);
   return [...p, ...y, ...n];
@@ -33,8 +33,8 @@ export async function fetchCardById(id: string): Promise<UnifiedCard | null> {
 export async function searchCards(query: string, category?: CardCategory): Promise<UnifiedCard[]> {
   if (!category) {
     const [p, y] = await Promise.all([
-      searchPokemonCards(query, 12).catch(() => []),
-      searchYugiohCards(query, 12).catch(() => []),
+      searchPokemonCards(query, 24).catch(() => []),
+      searchYugiohCards(query, 24).catch(() => []),
     ]);
     const nba = getSeededNbaCards().filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
     return [...p, ...y, ...nba];
@@ -76,4 +76,4 @@ export async function fetchAllSets(): Promise<Array<{ name: string; code: string
   return [...pokeMapped, ...ygoMapped];
 }
 
-export { fetchYugiohCardsBySet, fetchPokemonSets, fetchYugiohSets, fetchPokemonCards };
+export { fetchYugiohCardsBySet, fetchPokemonSets, fetchYugiohSets, fetchPokemonCards, fetchYugiohByArchetype, fetchYugiohArchetypes };

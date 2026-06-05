@@ -38,7 +38,7 @@ function pickPrice(c: PokemonApiCard): { market: number; prev: number; high?: nu
     return { market, prev, low: cm.lowPrice, tcgUrl, cmPrice };
   }
   if (tp) {
-    const variant = tp.holofoil ?? tp["1stEditionHolofoil"] ?? tp.normal ?? Object.values(tp)[0];
+    const variant = tp.holofoil ?? tp["1stEditionHolofoil"] ?? tp.normal ?? tp.reverseHolofoil ?? Object.values(tp)[0];
     if (variant?.market) {
       return {
         market: variant.market,
@@ -76,18 +76,47 @@ function toUnified(c: PokemonApiCard): UnifiedCard {
   };
 }
 
+// Default queries that surface the most valuable/interesting cards
+const DEFAULT_QUERIES = [
+  'rarity:"Illustration Rare" OR rarity:"Special Illustration Rare"',
+  'rarity:"Rare Holo VMAX" OR rarity:"Rare Holo VSTAR"',
+  'rarity:"Rare Holo V" OR rarity:"Ultra Rare"',
+  'rarity:"Rare Holo" OR rarity:"Rare"',
+];
+
 export async function fetchPokemonCards(opts: { query?: string; pageSize?: number } = {}): Promise<UnifiedCard[]> {
+  if (opts.query) {
+    return fetchPokemonCardsByQuery(opts.query, opts.pageSize ?? 48);
+  }
+
+  // Fetch from multiple rarity tiers to get a rich variety
+  const perQuery = Math.ceil((opts.pageSize ?? 48) / DEFAULT_QUERIES.length);
+  const results = await Promise.all(
+    DEFAULT_QUERIES.map((q) => fetchPokemonCardsByQuery(q, perQuery).catch(() => [] as UnifiedCard[]))
+  );
+
+  // Merge and deduplicate
+  const seen = new Set<string>();
+  const merged: UnifiedCard[] = [];
+  for (const batch of results) {
+    for (const card of batch) {
+      if (seen.has(card.id) || card.marketPrice <= 0) continue;
+      seen.add(card.id);
+      merged.push(card);
+    }
+  }
+  return merged.sort((a, b) => b.marketPrice - a.marketPrice).slice(0, opts.pageSize ?? 48);
+}
+
+async function fetchPokemonCardsByQuery(query: string, pageSize: number): Promise<UnifiedCard[]> {
   const params = new URLSearchParams();
-  const q =
-    opts.query ||
-    'rarity:"Rare Holo" OR rarity:"Rare Holo VMAX" OR rarity:"Illustration Rare" OR rarity:"Special Illustration Rare"';
-  params.set("q", q);
-  params.set("pageSize", String(opts.pageSize ?? 24));
+  params.set("q", query);
+  params.set("pageSize", String(Math.min(pageSize, 100)));
   params.set("orderBy", "-cardmarket.prices.trendPrice");
   const url = `${BASE}/cards?${params.toString()}`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) {
-    console.error("[pokemon] fetch failed", res.status, await res.text().catch(() => ""));
+    console.error("[pokemon] fetch failed", res.status);
     return [];
   }
   const json = (await res.json()) as { data: PokemonApiCard[] };
@@ -102,9 +131,9 @@ export async function fetchPokemonCard(id: string): Promise<UnifiedCard | null> 
   return json.data ? toUnified(json.data) : null;
 }
 
-export async function searchPokemonCards(query: string, pageSize = 24): Promise<UnifiedCard[]> {
+export async function searchPokemonCards(query: string, pageSize = 48): Promise<UnifiedCard[]> {
   if (!query.trim()) return fetchPokemonCards({ pageSize });
-  return fetchPokemonCards({ query: `name:"*${query}*"`, pageSize });
+  return fetchPokemonCardsByQuery(`name:"*${query}*"`, pageSize);
 }
 
 export async function fetchPokemonSets(): Promise<Array<{ name: string; id: string; releaseDate?: string; totalCards?: number }>> {

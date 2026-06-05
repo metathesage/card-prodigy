@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { fetchAllSets } from "@/lib/cards";
 import type { CardCategory } from "@/lib/cards/types";
 import { RELEASES_2026, type ReleaseEntry } from "@/lib/cards/releaseData";
-import { Calendar, Star, Zap, ArrowRight, Globe, Filter } from "lucide-react";
+import { Calendar, Star, Zap, ArrowRight, Globe, ListFilter as Filter } from "lucide-react";
 
 export const Route = createFileRoute("/releases")({
   head: () => ({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/releases")({
   component: ReleasesPage,
 });
 
-type Tab = "all" | "pokemon" | "yugioh";
+type Tab = "all" | "pokemon" | "yugioh" | "other";
 type RegionFilter = "all" | "EN" | "JP";
 
 function ReleasesPage() {
@@ -35,7 +35,7 @@ function ReleasesPage() {
   }, []);
 
   const allReleases = useMemo(() => {
-    return RELEASES_2026.filter((r) => r.category !== "other");
+    return RELEASES_2026;
   }, []);
 
   const filtered = useMemo(() => {
@@ -91,7 +91,7 @@ function ReleasesPage() {
 
           <div className="flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex gap-px bg-hairline">
-              {(["all", "pokemon", "yugioh"] as const).map((t) => (
+              {(["all", "pokemon", "yugioh", "other"] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
@@ -101,7 +101,7 @@ function ReleasesPage() {
                       : "surface-1 hover:bg-surface-2 text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {t === "all" ? "All" : t === "pokemon" ? "Pokemon" : "Yu-Gi-Oh"}
+                  {t === "all" ? "All" : t === "pokemon" ? "Pokemon" : t === "yugioh" ? "Yu-Gi-Oh" : "Other"}
                 </button>
               ))}
             </div>
@@ -266,10 +266,12 @@ function ReleaseCard({ release }: { release: ReleaseEntry }) {
             className={`font-mono text-[9px] tracking-[0.2em] uppercase px-2 py-0.5 rounded ${
               release.category === "pokemon"
                 ? "text-iris bg-iris/10"
-                : "text-bull bg-bull/10"
+                : release.category === "yugioh"
+                ? "text-bull bg-bull/10"
+                : "text-platinum bg-platinum/10"
             }`}
           >
-            {release.category}
+            {release.category === "yugioh" ? "YGO" : release.category}
           </span>
           {release.region === "JP" && (
             <span className="font-mono text-[9px] tracking-[0.2em] uppercase text-lavender bg-lavender/10 px-2 py-0.5 rounded flex items-center gap-1">

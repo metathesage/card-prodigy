@@ -153,7 +153,7 @@ function Hero() {
           <div className="lg:col-span-4 space-y-px hidden lg:block">
             <StatLine label="Tracked Cards" value="12,400+" tone="iris" />
             <StatLine label="Categories" value="Pokemon · YGO · NBA" />
-            <StatLine label="AI Model" value="Gemini 2.5 Flash" tone="iris" />
+            <StatLine label="AI Model" value="Gemini 2.5 Pro" tone="iris" />
             <StatLine label="Update Cadence" value="Real-time · 24h" />
           </div>
         </div>
@@ -374,7 +374,7 @@ function AiPicksSection({ picks, loading }: { picks: AiPick[] | null; loading: b
               AI Picks <span className="text-iris">·</span> Undervalued
             </h2>
             <p className="mt-3 text-sm text-muted-foreground max-w-xl">
-              VAULT's market analyst (Gemini 2.5) reviews the live cross-category snapshot to surface overlooked or mispriced cards.
+              VAULT's market analyst (Gemini 2.5 Pro) reviews the live cross-category snapshot to surface overlooked or mispriced cards.
             </p>
           </div>
         </div>

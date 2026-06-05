@@ -73,7 +73,7 @@ Respond ONLY with valid JSON in this exact shape:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-flash-preview-05-20",
         messages: [
           { role: "system", content: "You are an expert card market analyst. Output only valid JSON." },
           { role: "user", content: prompt },
