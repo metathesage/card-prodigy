@@ -1,5 +1,5 @@
 // Yu-Gi-Oh via YGOPRODeck — free, no key. Includes TCGplayer + Cardmarket prices.
-import type { UnifiedCard, CardSet } from "./types";
+import type { UnifiedCard, CardSet, ValueAssessment } from "./types";
 
 const BASE = "https://db.ygoprodeck.com/api/v7";
 
@@ -34,6 +34,19 @@ function parsePrice(s: string | undefined): number {
   if (!s) return 0;
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
+}
+
+function computeValueAssessment(market: number, prev: number, high?: number, low?: number): ValueAssessment {
+  const changePct = prev > 0 ? ((market - prev) / prev) * 100 : 0;
+  let score = 0;
+  if (low && low > 0 && market <= low * 1.05) score += 20;
+  if (high && high > 0 && market >= high * 0.95) score -= 20;
+  if (changePct < -5) score += 25;
+  if (changePct > 8) score -= 25;
+  if (changePct < -2 && changePct > -5) score += 10;
+  if (score > 15) return "undervalued";
+  if (score < -15) return "overvalued";
+  return "fair";
 }
 
 function toUnified(c: YugiohApiCard): UnifiedCard {
@@ -75,6 +88,7 @@ function toUnified(c: YugiohApiCard): UnifiedCard {
     low: Math.min(...[tcg, cm, ebay].filter((n) => n > 0)),
     tcgplayerUrl,
     cardmarketPrice: cm > 0 ? cm : undefined,
+    valueAssessment: computeValueAssessment(market, prev, Math.max(tcg, cm, ebay), Math.min(...[tcg, cm, ebay].filter((n) => n > 0)) || undefined),
     sets,
   };
 }

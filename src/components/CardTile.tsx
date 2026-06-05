@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import type { UnifiedCard } from "@/lib/cards/types";
+import type { UnifiedCard, ValueAssessment } from "@/lib/cards/types";
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 
 interface CardTileProps {
   card: UnifiedCard;
@@ -9,9 +10,26 @@ interface CardTileProps {
 const FALLBACK_IMG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'><rect width='300' height='400' fill='%23211A21'/><text x='50%25' y='50%25' fill='%234F43AE' font-family='monospace' font-size='14' text-anchor='middle' dy='.3em'>NO IMAGE</text></svg>";
 
+function ValueBadge({ assessment }: { assessment: ValueAssessment }) {
+  const config = {
+    undervalued: { icon: TrendingUp, label: "Under", color: "text-bull bg-bull/10 border-bull/30" },
+    fair: { icon: Minus, label: "Fair", color: "text-lavender bg-lavender/10 border-lavender/30" },
+    overvalued: { icon: TrendingDown, label: "Over", color: "text-bear bg-bear/10 border-bear/30" },
+  } as const;
+  const c = config[assessment];
+  const Icon = c.icon;
+  return (
+    <span className={`font-mono text-[8px] tracking-[0.2em] uppercase px-1.5 py-0.5 border rounded flex items-center gap-0.5 ${c.color}`}>
+      <Icon size={8} />
+      {c.label}
+    </span>
+  );
+}
+
 export function CardTile({ card, rank }: CardTileProps) {
   const up = card.changePct >= 0;
   const isChase = card.marketPrice > 50;
+  const value = card.valueAssessment ?? "fair";
   return (
     <Link
       to="/card/$id"
@@ -28,8 +46,11 @@ export function CardTile({ card, rank }: CardTileProps) {
           {String(rank + 1).padStart(2, "0")}
         </div>
       )}
-      <div className="absolute top-3 right-3 z-10 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 bg-background/40 backdrop-blur px-2 py-1 rounded">
-        {card.category}
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+        {card.valueAssessment && <ValueBadge assessment={card.valueAssessment} />}
+        <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 bg-background/40 backdrop-blur px-2 py-1 rounded">
+          {card.category}
+        </span>
       </div>
 
       <div className="aspect-[3/4] relative overflow-hidden bg-surface-2 flex items-center justify-center">

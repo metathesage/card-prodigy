@@ -3,6 +3,8 @@ export type CardCategory = "pokemon" | "yugioh" | "nba";
 
 export type Signal = "buy" | "sell" | "hold";
 
+export type ValueAssessment = "undervalued" | "fair" | "overvalued";
+
 export interface CardSet {
   setName: string;
   setCode: string;
@@ -35,6 +37,8 @@ export interface UnifiedCard {
   cardmarketPrice?: number;  // Cardmarket price for comparison
   // Multiple set printings
   sets?: CardSet[];
+  // Value assessment
+  valueAssessment?: ValueAssessment;
 }
 
 export interface PriceHistoryPoint {
@@ -49,4 +53,5 @@ export interface RecentSale {
   condition: string;
   grade?: string;
   source: string;
+  url?: string;              // Link to the sale listing
 }

@@ -1,6 +1,5 @@
 // AI signal helpers — derive Buy / Sell / Hold from market dynamics.
-// Used both on the homepage table and as a server-fn input to AI picks.
-import type { UnifiedCard, Signal } from "./types";
+import type { UnifiedCard, Signal, ValueAssessment } from "./types";
 
 export interface SignalRow {
   card: UnifiedCard;
@@ -11,24 +10,57 @@ export interface SignalRow {
 }
 
 /**
- * Heuristic signal generator — works without any AI call so the table is
- * always live. The AI picks server function refines a subset of these.
+ * Compute value assessment: undervalued / fair / overvalued
+ * Uses a composite of momentum, mean-reversion, and price position relative to range.
+ */
+export function assessValue(card: UnifiedCard): ValueAssessment {
+  const change = card.changePct;
+  const w = card.weeklyChange ?? change * 1.4;
+  const m = card.monthlyChange ?? change * 2.1;
+
+  // Score: positive = undervalued, negative = overvalued
+  let score = 0;
+
+  // Price near 24h low suggests undervaluation
+  if (card.low && card.marketPrice <= card.low * 1.05) score += 20;
+  // Price near 24h high suggests overvaluation
+  if (card.high && card.marketPrice >= card.high * 0.95) score -= 20;
+
+  // Strong negative momentum + price still falling = oversold = undervalued
+  if (change < -5 && m < -10) score += 30;
+  if (change < -3 && w < 0) score += 15;
+
+  // Strong positive momentum extended = overvalued
+  if (change > 8 && m > 20) score -= 30;
+  if (change > 5 && w > 15) score -= 20;
+
+  // Mean reversion: recent pullback on otherwise stable card = buy
+  if (change < -2 && m > -5 && card.marketPrice > 100) score += 15;
+
+  // Extended run on low-liquidity card = risky
+  if (change > 10 && card.marketPrice < 50) score -= 15;
+
+  // Weekly flat but monthly positive = steady accumulation, slight undervalued
+  if (Math.abs(w) < 3 && m > 5) score += 10;
+
+  if (score > 15) return "undervalued";
+  if (score < -15) return "overvalued";
+  return "fair";
+}
+
+/**
+ * Heuristic signal generator — works without any AI call.
  */
 export function deriveSignal(card: UnifiedCard): SignalRow {
   const change = card.changePct;
   const w = card.weeklyChange ?? change * 1.4;
   const m = card.monthlyChange ?? change * 2.1;
 
-  // Composite momentum score — penalizes parabolic moves, rewards mean-reversion
   let score = 0;
-  // Mean reversion bias: down 24h + flat-ish 30d → buy
   if (change < -3 && m > -8) score += 30;
-  // Strong negative 30d on a blue chip → buy the dip
   if (m < -15 && card.marketPrice > 500) score += 25;
-  // Overheated: parabolic recent run → sell
   if (w > 20 && m > 35) score -= 40;
   if (change > 12) score -= 20;
-  // Steady accumulation
   if (w > 0 && w < 8 && m > 5 && m < 20) score += 15;
 
   const action: Signal = score > 18 ? "buy" : score < -15 ? "sell" : "hold";

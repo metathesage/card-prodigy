@@ -1,5 +1,5 @@
 // Pokemon TCG via pokemontcg.io — free, no key required (rate-limited but fine for our use)
-import type { UnifiedCard } from "./types";
+import type { UnifiedCard, ValueAssessment } from "./types";
 
 const BASE = "https://api.pokemontcg.io/v2";
 
@@ -53,6 +53,19 @@ function pickPrice(c: PokemonApiCard): { market: number; prev: number; high?: nu
   return { market: 0, prev: 0 };
 }
 
+function computeValueAssessment(market: number, prev: number, high?: number, low?: number): ValueAssessment {
+  const changePct = prev > 0 ? ((market - prev) / prev) * 100 : 0;
+  let score = 0;
+  if (low && market <= low * 1.05) score += 20;
+  if (high && market >= high * 0.95) score -= 20;
+  if (changePct < -5) score += 25;
+  if (changePct > 8) score -= 25;
+  if (changePct < -2 && changePct > -5) score += 10;
+  if (score > 15) return "undervalued";
+  if (score < -15) return "overvalued";
+  return "fair";
+}
+
 function toUnified(c: PokemonApiCard): UnifiedCard {
   const { market, prev, high, low, tcgUrl, cmPrice } = pickPrice(c);
   const changePct = prev > 0 ? ((market - prev) / prev) * 100 : 0;
@@ -73,6 +86,7 @@ function toUnified(c: PokemonApiCard): UnifiedCard {
     releaseYear: c.set?.releaseDate ? Number(c.set.releaseDate.slice(0, 4)) : undefined,
     tcgplayerUrl: tcgUrl,
     cardmarketPrice: cmPrice,
+    valueAssessment: computeValueAssessment(market, prev, high, low),
   };
 }
 

@@ -5,11 +5,11 @@ import { PriceChart } from "@/components/PriceChart";
 import { fetchCardById, getPriceHistory } from "@/lib/cards";
 import { fetchRecentSales } from "@/lib/cards/ebayService";
 import { deriveSignal } from "@/lib/cards/signals";
-import type { UnifiedCard, RecentSale, CardCategory } from "@/lib/cards/types";
+import type { UnifiedCard, RecentSale, CardCategory, ValueAssessment } from "@/lib/cards/types";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export const Route = createFileRoute("/card/$id")({
   head: ({ params }) => ({
@@ -75,7 +75,7 @@ function CardDetailPage() {
       .then(async (c) => {
         setCard(c);
         if (c) {
-          const s = await fetchRecentSales(c.id, c.marketPrice);
+          const s = await fetchRecentSales(c.id, c.marketPrice, c.name);
           setSales(s);
         }
       })
@@ -202,6 +202,7 @@ function CardDetailPage() {
                     {card.number}
                   </span>
                 )}
+                <ValueChip assessment={card.valueAssessment ?? "fair"} />
                 <SignalChip action={signal.action} />
               </div>
               <h1 className="font-mono text-3xl md:text-5xl tracking-tight">{card.name}</h1>
@@ -230,6 +231,9 @@ function CardDetailPage() {
               </div>
             </div>
 
+            {/* Value Assessment */}
+            <ValueAssessmentBar assessment={card.valueAssessment ?? "fair"} marketPrice={card.marketPrice} />
+
             {/* AI Signal */}
             <div className="glass p-6 rounded-lg relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 dither-fine text-iris opacity-10 pointer-events-none" />
@@ -249,6 +253,52 @@ function CardDetailPage() {
                   <div className="font-mono text-2xl tabular-nums text-iris">${signal.target.toFixed(2)}</div>
                   <div className="font-mono text-[10px] uppercase tracking-[0.3em] mt-1 text-muted-foreground">
                     {(((signal.target - card.marketPrice) / card.marketPrice) * 100).toFixed(1)}% upside
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Market Intelligence */}
+            <div className="glass p-6 rounded-lg">
+              <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-iris mb-3 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-iris animate-pulse-iris" />
+                Market Intelligence
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="surface-1 p-3 rounded-lg">
+                  <div className="font-mono text-[8px] tracking-[0.2em] uppercase text-muted-foreground mb-1">Volatility</div>
+                  <div className="font-mono text-sm tabular-nums">
+                    {Math.abs(card.changePct) > 5 ? "High" : Math.abs(card.changePct) > 2 ? "Medium" : "Low"}
+                  </div>
+                  <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
+                    {Math.abs(card.changePct).toFixed(1)}% 24h
+                  </div>
+                </div>
+                <div className="surface-1 p-3 rounded-lg">
+                  <div className="font-mono text-[8px] tracking-[0.2em] uppercase text-muted-foreground mb-1">Liquidity</div>
+                  <div className="font-mono text-sm tabular-nums">
+                    {card.population && card.population > 5000 ? "High" : card.population && card.population > 500 ? "Medium" : "Low"}
+                  </div>
+                  <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
+                    {card.population ? card.population.toLocaleString() + " graded" : "N/A"}
+                  </div>
+                </div>
+                <div className="surface-1 p-3 rounded-lg">
+                  <div className="font-mono text-[8px] tracking-[0.2em] uppercase text-muted-foreground mb-1">Trend</div>
+                  <div className={`font-mono text-sm tabular-nums ${(card.weeklyChange ?? 0) >= 0 ? "text-bull" : "text-bear"}`}>
+                    {(card.weeklyChange ?? 0) >= 0 ? "Bullish" : "Bearish"}
+                  </div>
+                  <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
+                    7d {(card.weeklyChange ?? 0) >= 0 ? "+" : ""}{(card.weeklyChange ?? 0).toFixed(1)}%
+                  </div>
+                </div>
+                <div className="surface-1 p-3 rounded-lg">
+                  <div className="font-mono text-[8px] tracking-[0.2em] uppercase text-muted-foreground mb-1">Support</div>
+                  <div className="font-mono text-sm tabular-nums">
+                    ${card.low ? card.low.toFixed(2) : (card.marketPrice * 0.85).toFixed(2)}
+                  </div>
+                  <div className="font-mono text-[9px] text-muted-foreground mt-0.5">
+                    24h floor
                   </div>
                 </div>
               </div>
@@ -444,7 +494,15 @@ function CardDetailPage() {
                   <tr key={s.id} className="border-t border-hairline hover:bg-surface-2 transition">
                     <td className="py-3 font-mono text-xs text-muted-foreground">{s.date}</td>
                     <td className="py-3 font-mono text-xs">{s.condition}</td>
-                    <td className="py-3 font-mono text-xs text-muted-foreground">{s.source}</td>
+                    <td className="py-3 font-mono text-xs">
+                      {s.url ? (
+                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-iris transition flex items-center gap-1">
+                          {s.source} <ExternalLink size={10} />
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">{s.source}</span>
+                      )}
+                    </td>
                     <td className="py-3 font-mono text-sm tabular-nums text-right">${s.price.toFixed(2)}</td>
                   </tr>
                 ))}
@@ -489,6 +547,20 @@ function SignalChip({ action }: { action: "buy" | "sell" | "hold" }) {
   return (
     <span className={`font-mono text-[9px] tracking-[0.3em] uppercase px-2 py-0.5 border ${styles[action]}`}>
       {action}
+    </span>
+  );
+}
+
+function ValueChip({ assessment }: { assessment: ValueAssessment }) {
+  const styles = {
+    undervalued: "text-bull bg-bull/10 border-bull/30",
+    fair: "text-lavender bg-lavender/10 border-lavender/30",
+    overvalued: "text-bear bg-bear/10 border-bear/30",
+  } as const;
+  const icons = { undervalued: "↗", fair: "—", overvalued: "↘" };
+  return (
+    <span className={`font-mono text-[9px] tracking-[0.3em] uppercase px-2 py-0.5 border ${styles[assessment]}`}>
+      {icons[assessment]} {assessment === "fair" ? "FAIR VALUE" : assessment.toUpperCase()}
     </span>
   );
 }
@@ -584,6 +656,74 @@ function AddToPortfolio({ card }: { card: UnifiedCard }) {
       >
         {adding ? "Adding…" : `Add ${qty} to Vault`}
       </button>
+    </div>
+  );
+}
+
+function ValueAssessmentBar({ assessment, marketPrice }: { assessment: ValueAssessment; marketPrice: number }) {
+  const config = {
+    undervalued: {
+      icon: TrendingUp,
+      label: "Undervalued",
+      color: "text-bull",
+      bg: "bg-bull/5",
+      border: "border-bull/20",
+      desc: "Trading below intrinsic value — potential buy opportunity.",
+    },
+    fair: {
+      icon: Minus,
+      label: "Fair Market Value",
+      color: "text-lavender",
+      bg: "bg-lavender/5",
+      border: "border-lavender/20",
+      desc: "Price aligned with market fundamentals.",
+    },
+    overvalued: {
+      icon: TrendingDown,
+      label: "Overvalued",
+      color: "text-bear",
+      bg: "bg-bear/5",
+      border: "border-bear/20",
+      desc: "Trading above intrinsic value — consider waiting for a pullback.",
+    },
+  } as const;
+  const c = config[assessment];
+  const Icon = c.icon;
+
+  // Visual position on the bar (0 = undervalued, 50 = fair, 100 = overvalued)
+  const position = assessment === "undervalued" ? 15 : assessment === "overvalued" ? 85 : 50;
+
+  return (
+    <div className={`glass p-5 rounded-lg border ${c.border} ${c.bg}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <Icon size={16} className={c.color} />
+          <span className={`font-mono text-sm uppercase tracking-[0.2em] ${c.color}`}>
+            {c.label}
+          </span>
+        </div>
+        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+          ${marketPrice.toFixed(2)}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">{c.desc}</p>
+      {/* Value spectrum bar */}
+      <div className="relative h-2 rounded-full bg-surface-2 overflow-hidden">
+        <div className="absolute inset-x-0 flex">
+          <div className="h-full bg-bull/30 flex-1" />
+          <div className="h-full bg-lavender/30 flex-1" />
+          <div className="h-full bg-bear/30 flex-1" />
+        </div>
+        <div
+          className={`absolute top-0 h-full w-1.5 rounded-full ${c.color.replace("text-", "bg-")} transition-all duration-500`}
+          style={{ left: `${position}%`, transform: "translateX(-50%)" }}
+        />
+      </div>
+      <div className="flex justify-between mt-1.5 font-mono text-[8px] uppercase tracking-[0.15em] text-muted-foreground">
+        <span>Under</span>
+        <span>Fair</span>
+        <span>Over</span>
+      </div>
     </div>
   );
 }

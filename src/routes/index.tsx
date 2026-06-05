@@ -228,8 +228,15 @@ function MoverGrid({ cards, tone }: { cards: UnifiedCard[]; tone: "bull" | "bear
             params={{ id: c.id }}
             className="group surface-1 p-4 hover:bg-surface-2 transition relative overflow-hidden block"
           >
-            <div className="font-mono text-[9px] tracking-[0.3em] text-muted-foreground mb-3">
-              {String(i + 1).padStart(2, "0")} / {c.category.toUpperCase()}
+            <div className="font-mono text-[9px] tracking-[0.3em] text-muted-foreground mb-3 flex items-center justify-between">
+              <span>{String(i + 1).padStart(2, "0")} / {c.category.toUpperCase()}</span>
+              {c.valueAssessment && c.valueAssessment !== "fair" && (
+                <span className={`font-mono text-[8px] tracking-[0.15em] uppercase px-1 py-0.5 rounded ${
+                  c.valueAssessment === "undervalued" ? "text-bull bg-bull/10" : "text-bear bg-bear/10"
+                }`}>
+                  {c.valueAssessment === "undervalued" ? "↗" : "↘"}
+                </span>
+              )}
             </div>
             <div className={`aspect-[3/4] mb-3 overflow-hidden ${isPhoto ? "bg-gradient-to-br from-surface-2 to-surface-3" : "bg-surface-2"}`}>
               <img

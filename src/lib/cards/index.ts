@@ -4,7 +4,7 @@ import { fetchPokemonCards, fetchPokemonCard, searchPokemonCards, fetchPokemonSe
 import { fetchYugiohTop, fetchYugiohCard, searchYugiohCards, fetchYugiohSets, fetchYugiohCardsBySet, fetchYugiohByArchetype, fetchYugiohArchetypes } from "./yugiohService";
 import { getSeededNbaCards, getSeededNbaCard, getSeededPriceHistory } from "./seedNba";
 
-export type { UnifiedCard, CardCategory, PriceHistoryPoint, RecentSale, CardSet } from "./types";
+export type { UnifiedCard, CardCategory, PriceHistoryPoint, RecentSale, CardSet, ValueAssessment } from "./types";
 
 export async function fetchTopCards(category: CardCategory, pageSize = 48): Promise<UnifiedCard[]> {
   if (category === "pokemon") return fetchPokemonCards({ pageSize });
