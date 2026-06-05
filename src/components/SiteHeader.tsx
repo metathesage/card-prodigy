@@ -5,6 +5,7 @@ import { VaultMark } from "./LustreMark";
 const NAV = [
   { to: "/", label: "Index" },
   { to: "/browse", label: "Browse" },
+  { to: "/releases", label: "Calendar" },
   { to: "/portfolio", label: "Vault" },
 ];
 

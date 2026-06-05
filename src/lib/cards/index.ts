@@ -1,10 +1,10 @@
 // Unified card service that dispatches to the right backend by category.
 import type { UnifiedCard, CardCategory, PriceHistoryPoint } from "./types";
-import { fetchPokemonCards, fetchPokemonCard, searchPokemonCards } from "./pokemonService";
-import { fetchYugiohTop, fetchYugiohCard, searchYugiohCards } from "./yugiohService";
+import { fetchPokemonCards, fetchPokemonCard, searchPokemonCards, fetchPokemonSets } from "./pokemonService";
+import { fetchYugiohTop, fetchYugiohCard, searchYugiohCards, fetchYugiohSets, fetchYugiohCardsBySet } from "./yugiohService";
 import { getSeededNbaCards, getSeededNbaCard, getSeededPriceHistory } from "./seedNba";
 
-export type { UnifiedCard, CardCategory, PriceHistoryPoint, RecentSale } from "./types";
+export type { UnifiedCard, CardCategory, PriceHistoryPoint, RecentSale, CardSet } from "./types";
 
 export async function fetchTopCards(category: CardCategory, pageSize = 24): Promise<UnifiedCard[]> {
   if (category === "pokemon") return fetchPokemonCards({ pageSize });
@@ -45,16 +45,35 @@ export async function searchCards(query: string, category?: CardCategory): Promi
 }
 
 export function getPriceHistory(card: UnifiedCard): PriceHistoryPoint[] {
-  // For all sources we use the seeded history generator keyed by card id+price.
-  // Pokemon/Yu-Gi-Oh APIs don't expose historical series for free; this gives a
-  // realistic chart shape until we wire a paid history provider.
   return getSeededPriceHistory(card.id, card.marketPrice || 10);
 }
 
-// Ranked movers — reusable for top-movers / top-losers sections
 export function rankByChange(cards: UnifiedCard[], direction: "up" | "down" = "up", limit = 6): UnifiedCard[] {
   const sorted = [...cards]
     .filter((c) => Number.isFinite(c.changePct) && c.marketPrice > 0)
     .sort((a, b) => (direction === "up" ? b.changePct - a.changePct : a.changePct - b.changePct));
   return sorted.slice(0, limit);
 }
+
+export async function fetchAllSets(): Promise<Array<{ name: string; code: string; category: CardCategory; releaseDate?: string; totalCards?: number }>> {
+  const [pokeSets, ygoSets] = await Promise.all([
+    fetchPokemonSets().catch(() => []),
+    fetchYugiohSets().catch(() => []),
+  ]);
+  const pokeMapped = pokeSets.map((s) => ({
+    name: s.name,
+    code: s.id,
+    category: "pokemon" as CardCategory,
+    releaseDate: s.releaseDate,
+    totalCards: s.totalCards,
+  }));
+  const ygoMapped = ygoSets.map((s) => ({
+    name: s.name,
+    code: s.code,
+    category: "yugioh" as CardCategory,
+    releaseDate: s.releaseDate,
+  }));
+  return [...pokeMapped, ...ygoMapped];
+}
+
+export { fetchYugiohCardsBySet, fetchPokemonSets, fetchYugiohSets };

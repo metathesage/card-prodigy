@@ -1,5 +1,5 @@
 // Yu-Gi-Oh via YGOPRODeck — free, no key. Includes TCGplayer + Cardmarket prices.
-import type { UnifiedCard } from "./types";
+import type { UnifiedCard, CardSet } from "./types";
 
 const BASE = "https://db.ygoprodeck.com/api/v7";
 
@@ -10,6 +10,10 @@ interface YugiohApiCard {
   desc?: string;
   race?: string;
   archetype?: string;
+  attribute?: string;
+  level?: number;
+  atk?: number;
+  def?: number;
   card_images: Array<{ image_url: string; image_url_small: string }>;
   card_sets?: Array<{ set_name: string; set_code: string; set_rarity: string; set_price: string }>;
   card_prices?: Array<{
@@ -18,6 +22,11 @@ interface YugiohApiCard {
     ebay_price: string;
     amazon_price: string;
     coolstuffinc_price: string;
+  }>;
+  misc_info?: Array<{
+    views?: number;
+    asks?: number;
+    tcgplayer_id?: number;
   }>;
 }
 
@@ -33,10 +42,24 @@ function toUnified(c: YugiohApiCard): UnifiedCard {
   const cm = parsePrice(p?.cardmarket_price);
   const ebay = parsePrice(p?.ebay_price);
   const market = tcg || cm || ebay || 0;
-  // Synthesize a 24h prev using small deterministic-ish offset
   const prev = market * (0.96 + ((c.id % 9) * 0.01));
   const changePct = prev > 0 ? ((market - prev) / prev) * 100 : 0;
   const firstSet = c.card_sets?.[0];
+
+  const tcgplayerId = c.misc_info?.[0]?.tcgplayer_id;
+  const tcgplayerUrl = tcgplayerId
+    ? `https://www.tcgplayer.com/product/${tcgplayerId}`
+    : undefined;
+
+  const sets: CardSet[] | undefined = c.card_sets?.length
+    ? c.card_sets.map((s) => ({
+        setName: s.set_name,
+        setCode: s.set_code,
+        rarity: s.set_rarity,
+        price: parsePrice(s.set_price),
+      }))
+    : undefined;
+
   return {
     id: `yugioh:${c.id}`,
     category: "yugioh",
@@ -50,10 +73,12 @@ function toUnified(c: YugiohApiCard): UnifiedCard {
     changePct,
     high: Math.max(tcg, cm, ebay),
     low: Math.min(...[tcg, cm, ebay].filter((n) => n > 0)),
+    tcgplayerUrl,
+    cardmarketPrice: cm > 0 ? cm : undefined,
+    sets,
   };
 }
 
-// Cache so we don't pound the API on every page nav
 let _topCache: { at: number; data: UnifiedCard[] } | null = null;
 
 export async function fetchYugiohTop(pageSize = 24): Promise<UnifiedCard[]> {
@@ -61,7 +86,6 @@ export async function fetchYugiohTop(pageSize = 24): Promise<UnifiedCard[]> {
   if (_topCache && now - _topCache.at < 60_000 * 5) {
     return _topCache.data.slice(0, pageSize);
   }
-  // Sort by tcgplayer descending — gives us the chase cards
   const url = `${BASE}/cardinfo.php?sort=tcgplayer&num=${pageSize}&offset=0`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) {
@@ -89,4 +113,24 @@ export async function searchYugiohCards(query: string, pageSize = 24): Promise<U
   if (!res.ok) return [];
   const json = (await res.json()) as { data: YugiohApiCard[] };
   return (json.data || []).map(toUnified);
+}
+
+export async function fetchYugiohSets(): Promise<Array<{ name: string; code: string; releaseDate?: string }>> {
+  const url = `${BASE}/cardsets.php`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return [];
+  const json = (await res.json()) as Array<{ set_name: string; set_code: string; tcg_date?: string }>;
+  return json.map((s) => ({
+    name: s.set_name,
+    code: s.set_code,
+    releaseDate: s.tcg_date,
+  }));
+}
+
+export async function fetchYugiohCardsBySet(setCode: string, pageSize = 48): Promise<UnifiedCard[]> {
+  const url = `${BASE}/cardinfo.php?cardset=${encodeURIComponent(setCode)}&num=${pageSize}&offset=0&sort=tcgplayer`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { data: YugiohApiCard[] };
+  return (json.data || []).map(toUnified).filter((c) => c.marketPrice > 0);
 }

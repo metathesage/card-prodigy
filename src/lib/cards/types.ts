@@ -3,6 +3,13 @@ export type CardCategory = "pokemon" | "yugioh" | "nba";
 
 export type Signal = "buy" | "sell" | "hold";
 
+export interface CardSet {
+  setName: string;
+  setCode: string;
+  rarity: string;
+  price: number;
+}
+
 export interface UnifiedCard {
   id: string;                // namespaced: "pokemon:base1-4"
   category: CardCategory;
@@ -23,6 +30,11 @@ export interface UnifiedCard {
   popGrade?: string;         // e.g. "PSA 10"
   weeklyChange?: number;     // 7d % change
   monthlyChange?: number;    // 30d % change
+  // Price source details
+  tcgplayerUrl?: string;     // Link to TCGPlayer product page
+  cardmarketPrice?: number;  // Cardmarket price for comparison
+  // Multiple set printings
+  sets?: CardSet[];
 }
 
 export interface PriceHistoryPoint {

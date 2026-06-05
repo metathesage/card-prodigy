@@ -140,6 +140,12 @@ function Hero() {
               >
                 Open your vault
               </Link>
+              <Link
+                to="/releases"
+                className="px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] border border-border hover:border-iris/50 hover:text-iris transition"
+              >
+                Release calendar
+              </Link>
             </div>
           </div>
 

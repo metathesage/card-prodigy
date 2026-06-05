@@ -9,12 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ReleasesRouteImport } from './routes/releases'
 import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CardIdRouteImport } from './routes/card.$id'
 
+const ReleasesRoute = ReleasesRouteImport.update({
+  id: '/releases',
+  path: '/releases',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortfolioRoute = PortfolioRouteImport.update({
   id: '/portfolio',
   path: '/portfolio',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/portfolio': typeof PortfolioRoute
+  '/releases': typeof ReleasesRoute
   '/card/$id': typeof CardIdRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/portfolio': typeof PortfolioRoute
+  '/releases': typeof ReleasesRoute
   '/card/$id': typeof CardIdRoute
 }
 export interface FileRoutesById {
@@ -61,14 +69,28 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/portfolio': typeof PortfolioRoute
+  '/releases': typeof ReleasesRoute
   '/card/$id': typeof CardIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/browse' | '/portfolio' | '/card/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/browse'
+    | '/portfolio'
+    | '/releases'
+    | '/card/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/browse' | '/portfolio' | '/card/$id'
-  id: '__root__' | '/' | '/auth' | '/browse' | '/portfolio' | '/card/$id'
+  to: '/' | '/auth' | '/browse' | '/portfolio' | '/releases' | '/card/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/browse'
+    | '/portfolio'
+    | '/releases'
+    | '/card/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,11 +98,19 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
   PortfolioRoute: typeof PortfolioRoute
+  ReleasesRoute: typeof ReleasesRoute
   CardIdRoute: typeof CardIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/releases': {
+      id: '/releases'
+      path: '/releases'
+      fullPath: '/releases'
+      preLoaderRoute: typeof ReleasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portfolio': {
       id: '/portfolio'
       path: '/portfolio'
@@ -124,6 +154,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
   PortfolioRoute: PortfolioRoute,
+  ReleasesRoute: ReleasesRoute,
   CardIdRoute: CardIdRoute,
 }
 export const routeTree = rootRouteImport

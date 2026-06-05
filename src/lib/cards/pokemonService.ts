@@ -9,7 +9,7 @@ interface PokemonApiCard {
   number?: string;
   rarity?: string;
   images: { small: string; large: string };
-  set?: { name?: string; releaseDate?: string };
+  set?: { name?: string; releaseDate?: string; id?: string };
   cardmarket?: {
     prices?: {
       averageSellPrice?: number;
@@ -21,19 +21,22 @@ interface PokemonApiCard {
     updatedAt?: string;
   };
   tcgplayer?: {
+    url?: string;
     prices?: Record<string, { market?: number; mid?: number; low?: number; high?: number }>;
   };
 }
 
-function pickPrice(c: PokemonApiCard): { market: number; prev: number; high?: number; low?: number } {
-  // Prefer cardmarket, fallback tcgplayer holofoil/normal
+function pickPrice(c: PokemonApiCard): { market: number; prev: number; high?: number; low?: number; tcgUrl?: string; cmPrice?: number } {
   const cm = c.cardmarket?.prices;
+  const cmPrice = cm?.trendPrice && cm.trendPrice > 0 ? cm.trendPrice : undefined;
+  const tp = c.tcgplayer?.prices;
+  const tcgUrl = c.tcgplayer?.url;
+
   if (cm?.trendPrice && cm.trendPrice > 0) {
     const market = cm.trendPrice;
     const prev = cm.avg7 ?? market * 0.98;
-    return { market, prev, low: cm.lowPrice };
+    return { market, prev, low: cm.lowPrice, tcgUrl, cmPrice };
   }
-  const tp = c.tcgplayer?.prices;
   if (tp) {
     const variant = tp.holofoil ?? tp["1stEditionHolofoil"] ?? tp.normal ?? Object.values(tp)[0];
     if (variant?.market) {
@@ -42,6 +45,8 @@ function pickPrice(c: PokemonApiCard): { market: number; prev: number; high?: nu
         prev: variant.mid ?? variant.market * 0.98,
         high: variant.high,
         low: variant.low,
+        tcgUrl,
+        cmPrice,
       };
     }
   }
@@ -49,7 +54,7 @@ function pickPrice(c: PokemonApiCard): { market: number; prev: number; high?: nu
 }
 
 function toUnified(c: PokemonApiCard): UnifiedCard {
-  const { market, prev, high, low } = pickPrice(c);
+  const { market, prev, high, low, tcgUrl, cmPrice } = pickPrice(c);
   const changePct = prev > 0 ? ((market - prev) / prev) * 100 : 0;
   return {
     id: `pokemon:${c.id}`,
@@ -66,12 +71,13 @@ function toUnified(c: PokemonApiCard): UnifiedCard {
     high,
     low,
     releaseYear: c.set?.releaseDate ? Number(c.set.releaseDate.slice(0, 4)) : undefined,
+    tcgplayerUrl: tcgUrl,
+    cardmarketPrice: cmPrice,
   };
 }
 
 export async function fetchPokemonCards(opts: { query?: string; pageSize?: number } = {}): Promise<UnifiedCard[]> {
   const params = new URLSearchParams();
-  // High-value popular cards by default
   const q =
     opts.query ||
     'rarity:"Rare Holo" OR rarity:"Rare Holo VMAX" OR rarity:"Illustration Rare" OR rarity:"Special Illustration Rare"';
@@ -99,4 +105,17 @@ export async function fetchPokemonCard(id: string): Promise<UnifiedCard | null> 
 export async function searchPokemonCards(query: string, pageSize = 24): Promise<UnifiedCard[]> {
   if (!query.trim()) return fetchPokemonCards({ pageSize });
   return fetchPokemonCards({ query: `name:"*${query}*"`, pageSize });
+}
+
+export async function fetchPokemonSets(): Promise<Array<{ name: string; id: string; releaseDate?: string; totalCards?: number }>> {
+  const url = `${BASE}/sets?orderBy=-releaseDate`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return [];
+  const json = (await res.json()) as { data: Array<{ name: string; id: string; releaseDate?: string; total?: number }> };
+  return json.data.map((s) => ({
+    name: s.name,
+    id: s.id,
+    releaseDate: s.releaseDate,
+    totalCards: s.total,
+  }));
 }

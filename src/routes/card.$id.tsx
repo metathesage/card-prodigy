@@ -5,10 +5,11 @@ import { PriceChart } from "@/components/PriceChart";
 import { fetchCardById, getPriceHistory } from "@/lib/cards";
 import { fetchRecentSales } from "@/lib/cards/ebayService";
 import { deriveSignal } from "@/lib/cards/signals";
-import type { UnifiedCard, RecentSale } from "@/lib/cards/types";
+import type { UnifiedCard, RecentSale, CardCategory } from "@/lib/cards/types";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/card/$id")({
   head: ({ params }) => ({
@@ -38,23 +39,30 @@ export const Route = createFileRoute("/card/$id")({
       </div>
     );
   },
-  notFoundComponent: () => (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <div className="font-mono text-xs tracking-[0.4em] uppercase text-muted-foreground mb-3">404</div>
-          <p className="text-sm">Card not found.</p>
-          <Link to="/browse" className="mt-6 inline-block text-[10px] font-mono uppercase tracking-[0.3em] text-iris">
-            ← Back to browse
-          </Link>
+  notFoundComponent: () => {
+    const router = useRouter();
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SiteHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="font-mono text-xs tracking-[0.4em] uppercase text-muted-foreground mb-3">404</div>
+            <p className="text-sm">Card not found.</p>
+            <button
+              onClick={() => router.history.back()}
+              className="mt-6 inline-block text-[10px] font-mono uppercase tracking-[0.3em] text-iris hover:text-iris/80 transition"
+            >
+              ← Back
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  ),
+    );
+  },
 });
 
 function CardDetailPage() {
+  const router = useRouter();
   const { id } = Route.useParams();
   const [card, setCard] = useState<UnifiedCard | null>(null);
   const [sales, setSales] = useState<RecentSale[]>([]);
@@ -96,9 +104,12 @@ function CardDetailPage() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <p className="text-sm">Card not found.</p>
-            <Link to="/browse" className="mt-4 inline-block text-[10px] font-mono uppercase tracking-[0.3em] text-iris">
-              ← Browse
-            </Link>
+            <button
+              onClick={() => router.history.back()}
+              className="mt-4 inline-block text-[10px] font-mono uppercase tracking-[0.3em] text-iris hover:text-iris/80 transition"
+            >
+              ← Back
+            </button>
           </div>
         </div>
       </div>
@@ -111,12 +122,18 @@ function CardDetailPage() {
   const signal = deriveSignal(card);
   const isPhoto = card.category === "nba";
 
-  // Grade premium estimate
   const gradePremium = {
     "PSA 10": 1.0,
     "PSA 9": 0.42,
     "BGS 9.5": 0.78,
     "Raw NM": 0.18,
+  };
+
+  const navigateToBrowse = (searchTab: CardCategory, searchQuery: string) => {
+    router.navigate({
+      to: "/browse",
+      search: { tab: searchTab, query: searchQuery, sort: "price_desc" },
+    });
   };
 
   return (
@@ -125,9 +142,19 @@ function CardDetailPage() {
 
       <main className="mx-auto max-w-[1400px] w-full px-6 lg:px-10 py-12 flex-1">
         <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-6">
-          <Link to="/browse" className="hover:text-iris transition">← Browse</Link>
+          <button
+            onClick={() => router.history.back()}
+            className="hover:text-iris transition"
+          >
+            ← Back
+          </button>
           <span className="mx-2 text-foreground/30">/</span>
-          {card.category}
+          <button
+            onClick={() => navigateToBrowse(card.category, "")}
+            className="hover:text-iris transition"
+          >
+            {card.category}
+          </button>
           <span className="mx-2 text-foreground/30">/</span>
           {card.id.split(":")[1]}
         </div>
@@ -156,13 +183,19 @@ function CardDetailPage() {
           <div className="lg:col-span-7 space-y-6">
             <div>
               <div className="flex items-center gap-3 mb-3 flex-wrap">
-                <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-iris bg-iris/10 px-2 py-0.5">
+                <button
+                  onClick={() => navigateToBrowse(card.category, "")}
+                  className="font-mono text-[9px] tracking-[0.3em] uppercase text-iris bg-iris/10 px-2 py-0.5 hover:bg-iris/20 transition"
+                >
                   {card.category}
-                </span>
+                </button>
                 {card.rarity && (
-                  <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-muted-foreground">
+                  <button
+                    onClick={() => navigateToBrowse(card.category, card.rarity)}
+                    className="font-mono text-[9px] tracking-[0.3em] uppercase text-muted-foreground hover:text-iris transition"
+                  >
                     {card.rarity}
-                  </span>
+                  </button>
                 )}
                 {card.number && (
                   <span className="font-mono text-[9px] tracking-[0.3em] uppercase text-muted-foreground">
@@ -227,13 +260,111 @@ function CardDetailPage() {
 
         {/* Set / Premium details */}
         <section className="grid md:grid-cols-3 gap-px bg-hairline mb-8">
-          <DetailCard label="Set" value={card.setName ?? "—"} />
+          {card.setName ? (
+            <button
+              onClick={() => navigateToBrowse(card.category, card.setName)}
+              className="surface-1 p-5 text-left hover:bg-surface-2 transition"
+            >
+              <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Set</div>
+              <div className="font-mono text-base text-iris hover:underline">{card.setName}</div>
+            </button>
+          ) : (
+            <DetailCard label="Set" value="—" />
+          )}
           <DetailCard label="Card Number" value={card.number ?? "—"} />
           <DetailCard label="Release Year" value={card.releaseYear ? String(card.releaseYear) : "—"} />
-          <DetailCard label="Rarity" value={card.rarity ?? "—"} />
+          {card.rarity ? (
+            <button
+              onClick={() => navigateToBrowse(card.category, card.rarity)}
+              className="surface-1 p-5 text-left hover:bg-surface-2 transition"
+            >
+              <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Rarity</div>
+              <div className="font-mono text-base text-iris hover:underline">{card.rarity}</div>
+            </button>
+          ) : (
+            <DetailCard label="Rarity" value="—" />
+          )}
           <DetailCard label="Population" value={card.population ? card.population.toLocaleString() : "—"} sub={card.popGrade} />
-          <DetailCard label="Category" value={card.category.toUpperCase()} />
+          <button
+            onClick={() => navigateToBrowse(card.category, "")}
+            className="surface-1 p-5 text-left hover:bg-surface-2 transition"
+          >
+            <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">Category</div>
+            <div className="font-mono text-base text-iris hover:underline">{card.category.toUpperCase()}</div>
+          </button>
         </section>
+
+        {/* Price Sources */}
+        {card.tcgplayerUrl && (
+          <section className="surface-1 p-6 md:p-8 mb-8">
+            <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+              Price Sources
+            </div>
+            <h2 className="font-mono text-2xl tracking-tight mb-4">Verify on TCGPlayer</h2>
+            <a
+              href={card.tcgplayerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-3 text-[10px] font-mono uppercase tracking-[0.25em] border border-border hover:border-iris hover:text-iris transition"
+            >
+              <ExternalLink size={12} />
+              View on TCGPlayer
+            </a>
+            {card.cardmarketPrice != null && (
+              <div className="mt-4 grid grid-cols-2 gap-px bg-hairline">
+                <div className="surface-1 p-4">
+                  <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-1">TCGPlayer</div>
+                  <div className="font-mono text-xl tabular-nums">${card.marketPrice.toFixed(2)}</div>
+                </div>
+                <div className="surface-1 p-4">
+                  <div className="font-mono text-[9px] tracking-[0.3em] uppercase text-muted-foreground mb-1">Cardmarket</div>
+                  <div className="font-mono text-xl tabular-nums">${card.cardmarketPrice.toFixed(2)}</div>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Card Sets (Yu-Gi-Oh has multiple printings) */}
+        {card.sets && card.sets.length > 1 && (
+          <section className="surface-1 p-6 md:p-8 mb-8">
+            <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
+              Printings
+            </div>
+            <h2 className="font-mono text-2xl tracking-tight mb-6">All Sets / Printings</h2>
+            <div className="hairline overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+                    <th className="text-left py-3 px-4 font-normal">Set</th>
+                    <th className="text-left py-3 px-4 font-normal">Code</th>
+                    <th className="text-left py-3 px-4 font-normal">Rarity</th>
+                    <th className="text-right py-3 px-4 font-normal">Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {card.sets.map((s, i) => (
+                    <tr key={i} className="border-t border-hairline hover:bg-surface-2 transition">
+                      <td className="py-3 px-4 font-mono text-xs">
+                        <button
+                          onClick={() => navigateToBrowse(card.category, s.setName)}
+                          className="hover:text-iris transition text-left"
+                        >
+                          {s.setName}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{s.setCode}</td>
+                      <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{s.rarity}</td>
+                      <td className="py-3 px-4 font-mono text-sm tabular-nums text-right">
+                        {s.price > 0 ? `$${s.price.toFixed(2)}` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
 
         {/* Grade Premiums */}
         {card.population != null && (
