@@ -7,24 +7,28 @@ interface CardTileProps {
 }
 
 const FALLBACK_IMG =
-  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'><rect width='300' height='400' fill='%23202028'/><text x='50%25' y='50%25' fill='%23666' font-family='monospace' font-size='14' text-anchor='middle' dy='.3em'>NO IMAGE</text></svg>";
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'><rect width='300' height='400' fill='%23211A21'/><text x='50%25' y='50%25' fill='%234F43AE' font-family='monospace' font-size='14' text-anchor='middle' dy='.3em'>NO IMAGE</text></svg>";
 
 export function CardTile({ card, rank }: CardTileProps) {
   const up = card.changePct >= 0;
+  const isChase = card.marketPrice > 50;
   return (
     <Link
       to="/card/$id"
       params={{ id: card.id }}
-      className="group relative block surface-1 hairline-b border border-border/50 hover:border-iris/40 transition-all duration-300 overflow-hidden"
+      className={`group relative block surface-1 border transition-all duration-300 overflow-hidden rounded-lg ${
+        isChase
+          ? "border-chase/20 hover:border-chase/50 chase-glow"
+          : "border-border/50 hover:border-iris/40"
+      }`}
     >
-      {/* dither corner accent */}
       <div className="absolute top-0 right-0 w-16 h-16 dither-fine text-iris opacity-20 pointer-events-none" />
       {rank !== undefined && (
-        <div className="absolute top-3 left-3 z-10 font-mono text-[10px] tracking-[0.3em] text-muted-foreground bg-background/60 backdrop-blur px-2 py-1">
+        <div className="absolute top-3 left-3 z-10 font-mono text-[10px] tracking-[0.3em] text-muted-foreground bg-background/60 backdrop-blur px-2 py-1 rounded">
           {String(rank + 1).padStart(2, "0")}
         </div>
       )}
-      <div className="absolute top-3 right-3 z-10 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 bg-background/40 backdrop-blur px-2 py-1">
+      <div className="absolute top-3 right-3 z-10 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 bg-background/40 backdrop-blur px-2 py-1 rounded">
         {card.category}
       </div>
 
@@ -64,7 +68,7 @@ export function CardTile({ card, rank }: CardTileProps) {
             </div>
           </div>
           <div
-            className={`font-mono text-xs tabular-nums px-2 py-1 ${
+            className={`font-mono text-xs tabular-nums px-2 py-1 rounded ${
               up ? "text-bull" : "text-bear"
             }`}
             style={{

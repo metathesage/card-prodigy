@@ -14,6 +14,7 @@ import { Route as PortfolioRouteImport } from './routes/portfolio'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SetCodeRouteImport } from './routes/set.$code'
 import { Route as CardIdRouteImport } from './routes/card.$id'
 
 const ReleasesRoute = ReleasesRouteImport.update({
@@ -41,6 +42,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SetCodeRoute = SetCodeRouteImport.update({
+  id: '/set/$code',
+  path: '/set/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CardIdRoute = CardIdRouteImport.update({
   id: '/card/$id',
   path: '/card/$id',
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/portfolio': typeof PortfolioRoute
   '/releases': typeof ReleasesRoute
   '/card/$id': typeof CardIdRoute
+  '/set/$code': typeof SetCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/portfolio': typeof PortfolioRoute
   '/releases': typeof ReleasesRoute
   '/card/$id': typeof CardIdRoute
+  '/set/$code': typeof SetCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +79,7 @@ export interface FileRoutesById {
   '/portfolio': typeof PortfolioRoute
   '/releases': typeof ReleasesRoute
   '/card/$id': typeof CardIdRoute
+  '/set/$code': typeof SetCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,8 +90,16 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/releases'
     | '/card/$id'
+    | '/set/$code'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/browse' | '/portfolio' | '/releases' | '/card/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/browse'
+    | '/portfolio'
+    | '/releases'
+    | '/card/$id'
+    | '/set/$code'
   id:
     | '__root__'
     | '/'
@@ -91,6 +108,7 @@ export interface FileRouteTypes {
     | '/portfolio'
     | '/releases'
     | '/card/$id'
+    | '/set/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -100,6 +118,7 @@ export interface RootRouteChildren {
   PortfolioRoute: typeof PortfolioRoute
   ReleasesRoute: typeof ReleasesRoute
   CardIdRoute: typeof CardIdRoute
+  SetCodeRoute: typeof SetCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -139,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/set/$code': {
+      id: '/set/$code'
+      path: '/set/$code'
+      fullPath: '/set/$code'
+      preLoaderRoute: typeof SetCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/card/$id': {
       id: '/card/$id'
       path: '/card/$id'
@@ -156,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortfolioRoute: PortfolioRoute,
   ReleasesRoute: ReleasesRoute,
   CardIdRoute: CardIdRoute,
+  SetCodeRoute: SetCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

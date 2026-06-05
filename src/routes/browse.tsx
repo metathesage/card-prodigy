@@ -152,7 +152,7 @@ function BrowsePage() {
             Section 02 — Browse
           </div>
           <h1 className="font-mono text-4xl md:text-6xl tracking-tight mb-8">
-            The <span className="text-iris">Index</span>
+            The <span className="text-holo">Index</span>
           </h1>
 
           <div className="flex flex-col gap-4 md:gap-6">
@@ -301,7 +301,7 @@ function BrowsePage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-hairline">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 stagger-children">
             {filtered.map((c) => (
               <CardTile key={c.id} card={c} />
             ))}

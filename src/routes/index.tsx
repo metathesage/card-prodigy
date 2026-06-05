@@ -103,8 +103,9 @@ function Hero() {
       <div className="absolute inset-0 dither-iris opacity-30 pointer-events-none" />
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse at 70% 20%, oklch(0.78 0.16 220 / 25%), transparent 60%)" }}
+        style={{ background: "radial-gradient(ellipse at 70% 20%, oklch(0.50 0.18 290 / 30%), transparent 60%)" }}
       />
+      <div className="absolute inset-0 crt-scanlines pointer-events-none" />
       <div className="absolute inset-0 dither-noise opacity-[0.04] pointer-events-none" />
 
       <div className="mx-auto max-w-[1400px] px-6 lg:px-10 py-24 md:py-36 relative">
@@ -112,12 +113,12 @@ function Hero() {
           <div className="lg:col-span-8 space-y-8">
             <div className="flex items-center gap-4 font-mono text-[10px] tracking-[0.4em] uppercase text-muted-foreground">
               <span className="w-12 h-px bg-iris" />
-              <span>Index 01 / Q4·2025</span>
+              <span>Index 01 / Q2·2026</span>
             </div>
 
             <h1 className="font-mono text-5xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight">
               The card market<br />
-              <span className="text-iris">decoded</span><br />
+              <span className="text-holo">decoded</span><br />
               <span className="text-chrome">in real time.</span>
             </h1>
 
@@ -129,20 +130,20 @@ function Hero() {
             <div className="flex flex-wrap gap-3 pt-4">
               <Link
                 to="/browse"
-                className="group relative px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] bg-foreground text-background overflow-hidden hover:opacity-95 transition"
+                className="group relative px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] bg-iris text-background overflow-hidden hover:opacity-95 transition rounded"
               >
                 <span className="relative z-10">Explore the index</span>
                 <span className="absolute inset-0 dither-fine text-background/30 opacity-50" />
               </Link>
               <Link
                 to="/portfolio"
-                className="px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] border border-border hover:border-iris/50 hover:text-iris transition"
+                className="px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] border border-border hover:border-iris/50 hover:text-iris transition rounded"
               >
                 Open your vault
               </Link>
               <Link
                 to="/releases"
-                className="px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] border border-border hover:border-iris/50 hover:text-iris transition"
+                className="px-8 py-4 text-[10px] font-mono uppercase tracking-[0.3em] border border-lavender/30 hover:border-lavender/60 hover:text-lavender transition rounded"
               >
                 Release calendar
               </Link>
@@ -470,7 +471,7 @@ function Footer() {
           modeled from a curated dataset. eBay sales adapter ready for keys.
         </p>
         <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground md:text-right">
-          © 2025 · Built with Lovable
+          © 2026 · VAULT
         </p>
       </div>
     </footer>

@@ -76,4 +76,4 @@ export async function fetchAllSets(): Promise<Array<{ name: string; code: string
   return [...pokeMapped, ...ygoMapped];
 }
 
-export { fetchYugiohCardsBySet, fetchPokemonSets, fetchYugiohSets };
+export { fetchYugiohCardsBySet, fetchPokemonSets, fetchYugiohSets, fetchPokemonCards };

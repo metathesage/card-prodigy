@@ -18,7 +18,7 @@ export function SiteHeader() {
       <div className="mx-auto max-w-[1400px] px-6 lg:px-10 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
           <VaultMark className="w-7 h-7" />
-          <span className="font-mono text-sm tracking-[0.35em] uppercase">VAULT</span>
+          <span className="font-mono text-sm tracking-[0.35em] uppercase text-iris">VAULT</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -28,8 +28,8 @@ export function SiteHeader() {
               <Link
                 key={n.to}
                 to={n.to}
-                className={`px-4 py-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors ${
-                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                className={`px-4 py-2 text-xs font-mono uppercase tracking-[0.2em] transition-colors rounded-sm ${
+                  active ? "text-iris bg-iris/5" : "text-muted-foreground hover:text-iris hover:bg-iris/5"
                 }`}
               >
                 {n.label}
@@ -49,7 +49,7 @@ export function SiteHeader() {
               </span>
               <button
                 onClick={signOut}
-                className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] border border-border hover:bg-surface-2 transition"
+                className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] border border-border hover:border-iris hover:text-iris transition rounded-sm"
               >
                 Sign out
               </button>
@@ -57,7 +57,7 @@ export function SiteHeader() {
           ) : (
             <Link
               to="/auth"
-              className="px-4 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] bg-foreground text-background hover:opacity-90 transition"
+              className="px-4 py-1.5 text-[10px] font-mono uppercase tracking-[0.2em] bg-iris text-background hover:opacity-90 transition rounded-sm"
             >
               Sign in
             </Link>

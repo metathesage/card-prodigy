@@ -208,7 +208,7 @@ function CardDetailPage() {
               {card.subtitle && <p className="mt-2 text-sm text-muted-foreground font-mono">{card.subtitle}</p>}
             </div>
 
-            <div className="surface-1 p-6 hairline">
+            <div className="glass p-6 rounded-lg">
               <div className="flex items-baseline justify-between flex-wrap gap-4">
                 <div>
                   <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
@@ -231,7 +231,7 @@ function CardDetailPage() {
             </div>
 
             {/* AI Signal */}
-            <div className="surface-1 p-6 hairline relative overflow-hidden">
+            <div className="glass p-6 rounded-lg relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 dither-fine text-iris opacity-10 pointer-events-none" />
               <div className="flex items-start justify-between gap-6 flex-wrap">
                 <div className="flex-1 min-w-[200px]">
@@ -259,7 +259,7 @@ function CardDetailPage() {
         </div>
 
         {/* Set / Premium details */}
-        <section className="grid md:grid-cols-3 gap-px bg-hairline mb-8">
+        <section className="grid md:grid-cols-3 gap-3 mb-8">
           {card.setName ? (
             <button
               onClick={() => navigateToBrowse(card.category, card.setName)}
@@ -296,7 +296,7 @@ function CardDetailPage() {
 
         {/* Price Sources */}
         {card.tcgplayerUrl && (
-          <section className="surface-1 p-6 md:p-8 mb-8">
+          <section className="glass p-6 md:p-8 mb-8 rounded-lg">
             <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
               Price Sources
             </div>
@@ -327,7 +327,7 @@ function CardDetailPage() {
 
         {/* Card Sets (Yu-Gi-Oh has multiple printings) */}
         {card.sets && card.sets.length > 1 && (
-          <section className="surface-1 p-6 md:p-8 mb-8">
+          <section className="glass p-6 md:p-8 mb-8 rounded-lg">
             <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
               Printings
             </div>
@@ -368,7 +368,7 @@ function CardDetailPage() {
 
         {/* Grade Premiums */}
         {card.population != null && (
-          <section className="surface-1 p-6 md:p-8 mb-8">
+          <section className="glass p-6 md:p-8 mb-8 rounded-lg">
             <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
               Grade Premium Matrix
             </div>
@@ -391,7 +391,7 @@ function CardDetailPage() {
         )}
 
         {/* Chart */}
-        <section className="surface-1 p-6 md:p-8 mb-8">
+        <section className="glass p-6 md:p-8 mb-8 rounded-lg">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
             <div>
               <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
@@ -417,7 +417,7 @@ function CardDetailPage() {
         </section>
 
         {/* Recent Sales */}
-        <section className="surface-1 p-6 md:p-8">
+        <section className="glass p-6 md:p-8 rounded-lg">
           <div className="flex items-center justify-between mb-6">
             <div>
               <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground mb-2">
@@ -532,7 +532,7 @@ function AddToPortfolio({ card }: { card: UnifiedCard }) {
   }
 
   return (
-    <div className="surface-1 p-6 hairline space-y-4">
+    <div className="glass p-6 rounded-lg space-y-4">
       <div className="font-mono text-[10px] tracking-[0.3em] uppercase text-muted-foreground">Add to Vault</div>
       <div className="grid grid-cols-2 gap-4">
         <div>
